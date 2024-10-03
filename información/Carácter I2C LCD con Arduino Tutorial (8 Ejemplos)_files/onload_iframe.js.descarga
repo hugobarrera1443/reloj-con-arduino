@@ -1,0 +1,49 @@
+/* eslint-disable */
+"use strict";
+(function() {
+    var titleHeight = 52, mobileTitleHeight = 72, imageHeightByBreakpoints = [
+        {width: [600, 700], height: [193, 227]},
+        {width: [700, 1000], height: [147, 214]},
+        {width: [1000, 1212], height: [158, 194]}
+    ], totalDesktopHeightWithoutImageAndTitle = 303, totalMobileHeight = 686;
+
+    function isMobileWidth(w) {
+        return w < 600;
+    }
+
+    function getHeight(t, e) {
+        if (isMobileWidth(t)) return totalMobileHeight + (e && mobileTitleHeight) + "px";
+        var i = imageHeightByBreakpoints.find(function (e) {
+            return e.width[0] <= t && t < e.width[1]
+        });
+        if (!i) return 0;
+        var h = i.height[1] - (i.height[1] - i.height[0]) / (i.width[1] - i.width[0]) * (i.width[1] - t);
+        return totalDesktopHeightWithoutImageAndTitle + h + (e && titleHeight) + "px"
+    }
+
+    function getSpecificGigHeight(w, wt) {
+        return (isMobileWidth(w) ? 292 : 326) + (wt ? titleHeight : 0) + 'px';
+    }
+
+    function iframeLoaded() {
+        Array.from(document.getElementsByClassName("fiverr_nga_frame")).forEach(function (t) {
+            var ow = t.offsetWidth;
+            var wt = t.dataset.withTitle === "true";
+            var sg = t.dataset.mode === "specific_gig";
+
+            t.height = sg ? getSpecificGigHeight(ow, wt) : getHeight(ow, wt)
+        })
+    }
+
+    iframeLoaded();
+    if (!window.isFiverrWidgetsEventsExists) {
+        window.addEventListener("resize", iframeLoaded);
+        window.addEventListener("message", function (t) {
+            if (t.origin === "https://www.fiverr.com" && t.data === "ready") {
+                var e = { url: window.location.href, key: "ONLOAD_IFRAME" };
+                t.source.postMessage(e, t.origin);
+            }
+        });
+    }
+    window.isFiverrWidgetsEventsExists = true;
+})();
